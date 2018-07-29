@@ -43,9 +43,9 @@
     [OutputType([void])]
     param
     (
-        [Parameter()]
+        [Parameter(Mandatory, Position = 0)]
         [Alias('CommandName')]
-        [string]$Name = 'Invoke-RestMethod',
+        [string]$Name,
 
         [Parameter()]
         [ValidateSet('Cmdlet', 'Function')]
