@@ -47,6 +47,13 @@
         [string]$CommandToProxy = 'Invoke-WebRequest'
     )
 
+    #testing
+    if ($Expression.ToString() -match 'Find-GitHubCode')
+    {
+        Import-Module (Join-Path $MyInvocation.MyCommand.Module.ModuleBase 'PSGithubSearch') -Force
+    }
+
+
     $Tokens = @()
     $ParseErrors = @()
     $ExpressionAst = [System.Management.Automation.Language.Parser]::ParseInput($Expression, [ref]$Tokens, [ref]$ParseErrors)
