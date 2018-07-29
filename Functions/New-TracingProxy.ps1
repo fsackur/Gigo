@@ -63,36 +63,22 @@
         $null = New-Item $OutputFolder -ItemType Directory -Force
     }
 
+    $ResourcePath = Join-Path $PSScriptRoot '..\Resources\New-TracingProxy.InjectionCode.ps1'
+    $InjectionCode = . $ResourcePath
+
     $CommandInfo = Get-Command $Name -CommandType $CommandType
     $CommandMetadata = [System.Management.Automation.CommandMetadata]::new($CommandInfo)
     $RawProxyDef = [System.Management.Automation.ProxyCommand]::Create($CommandMetadata)
     $TracingProxyDef = "function Global:$Name`r`n{`r`n$RawProxyDef}"
 
-    #param block braces on new line - pet peeve
-    $TracingProxyDef = $TracingProxyDef -replace '(?<=param)(?=\()', ([System.Environment]::NewLine + "    ")
-    $TracingProxyDef = $TracingProxyDef -replace '(?=\)\s*begin\s*\{)', ([System.Environment]::NewLine + "    ")
 
-    #Functional code injection begins
-    $TracingProxyDef = $TracingProxyDef -replace '(?<=begin\s*\{\s*)(?=try)', '$GigoTrace = New-GigoTraceObject
-    $null = $Global:GigoTrace[-1].Calls.Add($GigoTrace)
-    $GigoTrace.Invocation = $MyInvocation
-
-    '
-
-    #If we use the InternalCommand overload of Begin(), we lose the ability to capture the streams
-    $TracingProxyDef = $TracingProxyDef -replace '\$steppablePipeline\.Begin\(\$PSCmdlet\)', '$steppablePipeline.Begin($true)'
-
-    $TracingProxyDef = $TracingProxyDef -replace '(\$steppablePipeline\.(Begin|Process|End)\(.*?\))', '$Output = $1
-    if ($Output)
+    foreach ($Replace in $InjectionCode.Values)
     {
-        $null = $GigoTrace.Output.Add($Output.PSObject.Copy())
+        $TracingProxyDef = $TracingProxyDef -replace $Replace.Pattern, $Replace.Replacement
     }
-    $Output'
 
-    $TracingProxyDef = $TracingProxyDef -replace 'throw', '$null = $GigoTrace.Error.Add($PSItem)
-    throw'
 
-    #Needs to be legible for debugging
+    #Needs to be legible for debugging. Also, throws on parsing errors.
     $TracingProxyDef = PSScriptAnalyzer\Invoke-Formatter -Settings CodeFormattingAllman -ScriptDefinition $TracingProxyDef
 
     $OutFile = (Join-Path $OutputFolder "$Name.ps1")
