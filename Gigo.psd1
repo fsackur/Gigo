@@ -15,12 +15,14 @@
         '*'
     )
     CmdletsToExport   = @()
-    VariablesToExport = @()
+    VariablesToExport = @(
+        'GigoTrace'
+    )
     AliasesToExport   = @()
 
     PrivateData       = @{
         PSData = @{
-            Tags = @('Testing')
+            Tags = @('Testing', 'Pester')
         }
     }
 }
