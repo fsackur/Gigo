@@ -1,0 +1,5 @@
+{
+    "CommandName":  {
+        "Invocations": "Invoke-TestableCommandHere -With 'parameters'"
+    }
+}
